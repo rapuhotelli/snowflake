@@ -82,14 +82,32 @@ const { Draw } = Object(__WEBPACK_IMPORTED_MODULE_0__squigglies__["a" /* default
 ctx.fillStyle = 'black';
 ctx.strokeStyle = 'black';
 
-const d = new Draw(Math.random()*canvas.width, 50);
-d.update = function update() {
-  this.step +=2
-  this.x = this.startX + (this.step*2)+Math.cos(angleInRadians(this.step*5))*5
-  this.y = this.startY + (this.step)+Math.sin(angleInRadians(this.step*5))*5;
-  ctx.fillRect(this.x, this.y, 5, 5);
-};
-//d.render();
+const snowFlakeReset = function() {
+  return {
+    startX: Math.max(0, Math.random()*canvas.width-canvas.width/5),
+    startY: Math.max(0, Math.random()*canvas.height-canvas.height/5),
+    stepX: Math.random()*10,
+    stepY: Math.random()*10,
+    incrementX: 1+Math.random()*2,
+    incrementY: 1+Math.random()*1
+  }
+}
+
+function createSnowFlake() {
+  let d = new Draw(snowFlakeReset);
+  d.update = function update() {
+    this.stepX += this.incrementX;
+    this.stepY += this.incrementY;
+    this.x = this.startX + (this.stepX)+Math.cos(angleInRadians(this.stepX*2))*5
+    this.y = this.startY + (this.stepY)+Math.sin(angleInRadians(this.stepY*2))*5;
+    ctx.fillRect(this.x, this.y, 5, 5);
+  };
+  d.start();
+}
+
+const snowFlakeCount = 10;
+for (var s = 0; s < snowFlakeCount; s++) createSnowFlake();
+
 
 // */
 /*
@@ -108,44 +126,55 @@ f.render();
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-const fps = 30;
+const fps = 60;
 const interval = 1000 / fps;
 
 function Squigglies(ctx) {
 
-  function clearCanvas() {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  function willUpdate(instance) {
+    if (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) {
+      instance.reset();
+    }
   }
 
-  return {
-    Draw: function inner(startX, startY) {
-      let now;
-      let then = Date.now();
-      let delta;
+  // Collect all renderable instances here
+  const renderQueue = [];
 
-      this.startX = startX;
-      this.startY = startY;
-      this.x = startX;
-      this.y = startY;
-      this.step = 0;
+  let now;
+  let then = Date.now();
+  let delta;
+  (function renderBuffer() {
+    requestAnimationFrame(renderBuffer);
+    now = Date.now();
+    delta = now - then;
+    if (delta > interval) {
+      then = now - (delta % interval);
+      //willUpdate(this);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      renderQueue.map((instance) => {
+        (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) ? instance.reset() : instance.update();
+      })
+    }
+  })();
+
+  return {
+    Draw: function (reset) {
+
+      this.reset = () => {
+        Object.assign(this, reset())
+        this.x = this.startX;
+        this.y = this.startY;      
+      };
+      this.reset();
       this.ctx = ctx;
+
 
       this.update = () => {
         console.log('update');
       };
 
-      this.render = () => {
-        requestAnimationFrame(this.render.bind(this));
-        now = Date.now();
-        delta = now - then;
-        if (delta > interval) {
-          // update time stuffs
-
-          then = now - (delta % interval);
-          // ... Code for Drawing the Frame ...
-          clearCanvas();
-          this.update();
-        }
+      this.start = () => {
+        renderQueue.push(this);
       };
       return this;
     },

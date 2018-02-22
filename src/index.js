@@ -10,14 +10,32 @@ const { Draw } = Squigglies(ctx);
 ctx.fillStyle = 'black';
 ctx.strokeStyle = 'black';
 
-const d = new Draw(Math.random()*canvas.width, 50);
-d.update = function update() {
-  this.step +=2
-  this.x = this.startX + (this.step*2)+Math.cos(angleInRadians(this.step*5))*5
-  this.y = this.startY + (this.step)+Math.sin(angleInRadians(this.step*5))*5;
-  ctx.fillRect(this.x, this.y, 5, 5);
-};
-//d.render();
+const snowFlakeReset = function() {
+  return {
+    startX: Math.max(0, Math.random()*canvas.width-canvas.width/5),
+    startY: Math.max(0, Math.random()*canvas.height-canvas.height/5),
+    stepX: Math.random()*10,
+    stepY: Math.random()*10,
+    incrementX: 1+Math.random()*2,
+    incrementY: 1+Math.random()*1
+  }
+}
+
+function createSnowFlake() {
+  let d = new Draw(snowFlakeReset);
+  d.update = function update() {
+    this.stepX += this.incrementX;
+    this.stepY += this.incrementY;
+    this.x = this.startX + (this.stepX)+Math.cos(angleInRadians(this.stepX*2))*5
+    this.y = this.startY + (this.stepY)+Math.sin(angleInRadians(this.stepY*2))*5;
+    ctx.fillRect(this.x, this.y, 5, 5);
+  };
+  d.start();
+}
+
+const snowFlakeCount = 10;
+for (var s = 0; s < snowFlakeCount; s++) createSnowFlake();
+
 
 // */
 /*

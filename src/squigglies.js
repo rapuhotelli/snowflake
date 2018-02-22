@@ -1,41 +1,52 @@
-const fps = 30;
+const fps = 60;
 const interval = 1000 / fps;
 
 function Squigglies(ctx) {
 
-  function clearCanvas() {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  function willUpdate(instance) {
+    if (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) {
+      instance.reset();
+    }
   }
 
-  return {
-    Draw: function inner(startX, startY) {
-      let now;
-      let then = Date.now();
-      let delta;
+  // Collect all renderable instances here
+  const renderQueue = [];
 
-      this.startX = startX;
-      this.startY = startY;
-      this.x = startX;
-      this.y = startY;
-      this.step = 0;
+  let now;
+  let then = Date.now();
+  let delta;
+  (function renderBuffer() {
+    requestAnimationFrame(renderBuffer);
+    now = Date.now();
+    delta = now - then;
+    if (delta > interval) {
+      then = now - (delta % interval);
+      //willUpdate(this);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      renderQueue.map((instance) => {
+        (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) ? instance.reset() : instance.update();
+      })
+    }
+  })();
+
+  return {
+    Draw: function (reset) {
+
+      this.reset = () => {
+        Object.assign(this, reset())
+        this.x = this.startX;
+        this.y = this.startY;      
+      };
+      this.reset();
       this.ctx = ctx;
+
 
       this.update = () => {
         console.log('update');
       };
 
-      this.render = () => {
-        requestAnimationFrame(this.render.bind(this));
-        now = Date.now();
-        delta = now - then;
-        if (delta > interval) {
-          // update time stuffs
-
-          then = now - (delta % interval);
-          // ... Code for Drawing the Frame ...
-          clearCanvas();
-          this.update();
-        }
+      this.start = () => {
+        renderQueue.push(this);
       };
       return this;
     },
