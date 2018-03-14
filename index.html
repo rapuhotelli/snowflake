@@ -6,13 +6,41 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Lumisade</title>
   <style>
+    html, body {
+      position: relative;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /*
     #canvas {
       border: 1px solid black;
+      position: absolute;
+      
     }
+    */
+    #canvas {
+      z-index: -1;
+      background-image: url('synkkae16-9.jpg');
+      background-repeat: no-repeat;
+      background-size: contain;
+      width: 100%;
+      height: 100%;
+    }
+
+    #content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
   </style>
 </head>
 <body>
-  <canvas width="600" height="400" id="canvas"></canvas>
+  <div id="content">
+    <div id="background"></div>
+  </div>
   <script src="/dist/bundle.js"></script>
 </body>
 </html>

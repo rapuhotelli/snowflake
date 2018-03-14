@@ -1,40 +1,113 @@
 import Squigglies from './squigglies';
+import createSnowFlake from './snowflake';
+import {
+  getAspectHeight,
+  onResize,
+  onDocumentLoad
+} from './utils';
 
 const angleInRadians = angle => angle * (Math.PI / 180);
 const angleInDegrees = radian => radian * (180 / Math.PI);
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const { Draw } = Squigglies(ctx);
+// Flex container
+const content = document.getElementById('content');
+// Background
+const bg = document.getElementById('background');
+// Canvas
+const canvas = document.createElement('canvas');
+canvas.id = 'canvas';
+bg.appendChild(canvas);
 
-ctx.fillStyle = 'black';
+const adjustDimensions = (multiplier) => {
+  bg.width = document.body.scrollWidth * 1;
+  bg.height = getAspectHeight(bg.width);
+  canvas.width = bg.width;
+  canvas.height = bg.height;
+}
+onResize(adjustDimensions)
+onDocumentLoad(() => {
+  adjustDimensions()
+  foreground();
+  background();
+});
+
+const ctx = canvas.getContext('2d');
+
+//canvas.width = document.body.scrollWidth;
+//canvas.height = document.body.scrollHeight;
+
+const {Draw} = Squigglies(ctx);
+
 ctx.strokeStyle = 'black';
 
-const snowFlakeReset = function() {
-  return {
-    startX: Math.max(0, Math.random()*canvas.width-canvas.width/5),
-    startY: Math.max(0, Math.random()*canvas.height-canvas.height/5),
-    stepX: Math.random()*10,
-    stepY: Math.random()*10,
-    incrementX: 1+Math.random()*2,
-    incrementY: 1+Math.random()*1
+const background = () => {
+  const snowFlakeCount = 50;
+  for (let s = 0; s < snowFlakeCount; s++) {
+    createSnowFlake(ctx, Draw, {
+      ttl: function () {
+        return this.getStaticRandom(200, 480)
+      },
+      startX: function () {
+        return Math.random() * canvas.width
+      },
+      startY: function () {
+        return this.getStaticRandom(0, (canvas.height - canvas.height / 5))
+      },
+      travelX: function () {
+        return (this.oX
+          + (this.cycle
+            + Math.cos(angleInRadians(this.cycle * this.getStaticRandom(1, 4)))
+            * this.getStaticRandom(8, 9)
+          )
+          * this.getStaticRandom(-0.5, 1, 5)
+        )
+      },
+      travelY: function () {
+        return (this.oY
+          - (this.cycle
+            + Math.cos(angleInRadians(this.cycle * this.getStaticRandom(1, 5)))
+            * this.getStaticRandom(1, 5)
+          )
+        )
+      }
+    });
+  }
+};
+
+//foreground:  normal, slowly falling, fairly large flakes
+const foreground = () => {
+  const snowFlakeCount = 100;
+  for (var s = 0; s < snowFlakeCount; s++) {
+    createSnowFlake(ctx, Draw, {
+      ttl: function () {
+        return this.getStaticRandom(200, 320)
+      },
+      startX: function () {
+        return Math.random() * canvas.width
+      },
+      startY: function () {
+        return this.getStaticRandom(-(canvas.height / 4), (canvas.height - canvas.height / 5))
+      },
+      travelX: function () {
+        return (this.oX
+          + (this.cycle
+            + Math.cos(angleInRadians(this.cycle * this.getStaticRandom(1, 4)))
+            * this.getStaticRandom(8, 9)
+          )
+          * this.getStaticRandom(-0.5, 1, 5)
+        )
+      },
+      travelY: function () {
+        return (this.oY
+          + (this.cycle
+            + Math.cos(angleInRadians(this.cycle * this.getStaticRandom(1, 5)))
+            * this.getStaticRandom(1, 5)
+          )
+        )
+      }
+    });
   }
 }
-
-function createSnowFlake() {
-  let d = new Draw(snowFlakeReset);
-  d.update = function update() {
-    this.stepX += this.incrementX;
-    this.stepY += this.incrementY;
-    this.x = this.startX + (this.stepX)+Math.cos(angleInRadians(this.stepX*2))*5
-    this.y = this.startY + (this.stepY)+Math.sin(angleInRadians(this.stepY*2))*5;
-    ctx.fillRect(this.x, this.y, 5, 5);
-  };
-  d.start();
-}
-
-const snowFlakeCount = 10;
-for (var s = 0; s < snowFlakeCount; s++) createSnowFlake();
 
 
 // */

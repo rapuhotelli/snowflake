@@ -1,17 +1,14 @@
+import { getStaticRandom } from './utils';
+
 const fps = 60;
 const interval = 1000 / fps;
 
 function Squigglies(ctx) {
 
-  function willUpdate(instance) {
-    if (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) {
-      instance.reset();
-    }
-  }
-
   // Collect all renderable instances here
   const renderQueue = [];
 
+  // Draw all instances in one go
   let now;
   let then = Date.now();
   let delta;
@@ -21,34 +18,28 @@ function Squigglies(ctx) {
     delta = now - then;
     if (delta > interval) {
       then = now - (delta % interval);
-      //willUpdate(this);
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      renderQueue.map((instance) => {
-        (instance.x > ctx.canvas.width || instance.y > ctx.canvas.height) ? instance.reset() : instance.update();
-      })
+      renderQueue.map(instance => instance.update())
     }
   })();
 
   return {
-    Draw: function (reset) {
-
+    Draw: function () {
+      
       this.reset = () => {
-        Object.assign(this, reset())
-        this.x = this.startX;
-        this.y = this.startY;      
-      };
-      this.reset();
-      this.ctx = ctx;
+        throw new Error('Reset function not provided');
+      }
 
+      this.getStaticRandom = getStaticRandom;
 
+      // Assign a custom frame update function
       this.update = () => {
-        console.log('update');
+        throw new Error('Update function not provided');
       };
 
       this.start = () => {
         renderQueue.push(this);
       };
-      return this;
     },
   };
 }
